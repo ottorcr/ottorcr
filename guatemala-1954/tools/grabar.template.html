@@ -1,0 +1,232 @@
+<!doctype html>
+<!-- build -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grabar narración · Guatemala 1954</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14110d; --panel: #1d1914; --line: #3a3228; --ink: #f3ead6; --muted: #b7a98c;
+    --sky: #4a9fd8; --gold: #d9a441; --red: #c8442f; --green: #6fae5a;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans", system-ui, sans-serif; padding: 24px 16px 60px; }
+  main { max-width: 820px; margin: 0 auto; display: grid; gap: 16px; }
+  h1 { font-family: "Playfair Display", serif; color: var(--gold); margin: 0; font-size: 34px; }
+  .intro { color: var(--muted); line-height: 1.6; }
+  .intro li { margin-bottom: 4px; }
+  .bar { position: sticky; top: 0; z-index: 2; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+         background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .bar .count { font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--muted); margin-left: auto; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .card.done { border-color: var(--green); }
+  .card.rec { border-color: var(--red); box-shadow: 0 0 0 2px rgba(200,68,47,.35); }
+  .head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .num { font-family: "IBM Plex Mono", monospace; color: var(--sky); font-size: 13px; }
+  .title { font-weight: 600; }
+  .year { font-family: "IBM Plex Mono", monospace; color: var(--gold); font-size: 13px; }
+  .say { font-size: 20px; line-height: 1.55; margin: 0; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .status { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted); }
+  button { font: inherit; font-size: 14px; color: var(--ink); background: #252019; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--muted); }
+  button:disabled { opacity: .45; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+  button.rec { border-color: var(--red); color: #ffb3a6; }
+  button.primary { background: var(--gold); border-color: var(--gold); color: #1a140c; font-weight: 600; }
+  canvas { width: 100%; height: 40px; background: #120f0b; border-radius: 6px; }
+  .err { color: #ffb3a6; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Grabar la narración</h1>
+  <div class="intro">
+    <p>Lee en voz alta el texto de cada escena con tu acento. Al terminar, descarga los archivos y conviértelos en la pista de la animación.</p>
+    <ol>
+      <li>Busca un lugar silencioso y colócate a unos 20–30 cm del micrófono.</li>
+      <li>Pulsa <b>● Grabar</b>, lee el texto con calma y pulsa <b>■ Detener</b>. El silencio del inicio y del final se recorta solo.</li>
+      <li>Escucha la toma; si no te gusta, vuelve a grabarla.</li>
+      <li>Descarga todo (<code>00.wav</code> … <code>19.wav</code>) en la carpeta <code>guatemala-1954/grabaciones/</code> y ejecuta:<br>
+        <code>python3 tools/narrar.py --motor grabaciones &amp;&amp; python3 build.py</code></li>
+    </ol>
+    <p>Las grabaciones solo se guardan en esta pestaña: si la recargas, se pierden. Descárgalas antes de cerrar.</p>
+  </div>
+  <div class="bar">
+    <button id="micBtn" class="primary">🎙️ Activar micrófono</button>
+    <button id="allBtn" disabled>⬇ Descargar todas</button>
+    <span class="count" id="count"></span>
+  </div>
+  <p class="err" id="err" hidden></p>
+  <div id="list" style="display:grid; gap:16px"></div>
+</main>
+
+<script>
+/*TEXTOS*/
+(function () {
+  const $ = id => document.getElementById(id);
+  const list = $('list');
+  const takes = new Array(TEXTOS.length).fill(null); // { wav: Blob, url, dur }
+  let stream = null, recorder = null, recIdx = -1, chunks = [], ctx = null, analyser = null, raf = 0;
+
+  TEXTOS.forEach((t, i) => {
+    const n = String(i).padStart(2, '0');
+    const card = document.createElement('section');
+    card.className = 'card';
+    card.id = 'c' + i;
+    card.innerHTML = `
+      <div class="head"><span class="num">${n}</span><span class="year">${t.year}</span><span class="title">${t.title}</span></div>
+      <p class="say">${t.say}</p>
+      <canvas id="v${i}" width="800" height="40" hidden></canvas>
+      <div class="row">
+        <button id="r${i}" disabled>● Grabar</button>
+        <button id="p${i}" disabled>▶ Escuchar</button>
+        <button id="d${i}" disabled>⬇ ${n}.wav</button>
+        <span class="status" id="s${i}">sin grabar</span>
+      </div>`;
+    list.appendChild(card);
+    $('r' + i).onclick = () => recIdx === i ? stop() : start(i);
+    $('p' + i).onclick = () => new Audio(takes[i].url).play();
+    $('d' + i).onclick = () => download(i);
+  });
+
+  function refresh() {
+    const done = takes.filter(Boolean).length;
+    $('count').textContent = `${done} / ${TEXTOS.length} grabadas`;
+    $('allBtn').disabled = done === 0;
+    TEXTOS.forEach((_, i) => {
+      $('r' + i).disabled = !stream || (recIdx !== -1 && recIdx !== i);
+      $('r' + i).textContent = recIdx === i ? '■ Detener' : takes[i] ? '● Volver a grabar' : '● Grabar';
+      $('r' + i).classList.toggle('rec', recIdx === i);
+      $('p' + i).disabled = !takes[i] || recIdx !== -1;
+      $('d' + i).disabled = !takes[i];
+      $('c' + i).classList.toggle('done', !!takes[i]);
+      $('c' + i).classList.toggle('rec', recIdx === i);
+    });
+  }
+
+  $('micBtn').onclick = async () => {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } });
+      ctx = new AudioContext();
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      $('micBtn').textContent = '🎙️ Micrófono activo';
+      $('micBtn').disabled = true;
+      $('err').hidden = true;
+      refresh();
+    } catch (e) {
+      $('err').hidden = false;
+      $('err').textContent = 'No se pudo usar el micrófono: ' + e.message + '. Permite el acceso al micrófono en tu navegador y vuelve a intentarlo.';
+    }
+  };
+
+  function meter(i) {
+    const cv = $('v' + i), g = cv.getContext('2d'), buf = new Uint8Array(analyser.fftSize);
+    cv.hidden = false;
+    const draw = () => {
+      analyser.getByteTimeDomainData(buf);
+      g.clearRect(0, 0, cv.width, cv.height);
+      g.strokeStyle = '#c8442f'; g.lineWidth = 2; g.beginPath();
+      for (let x = 0; x < cv.width; x++) {
+        const v = buf[Math.floor(x / cv.width * buf.length)] / 128 - 1;
+        const y = cv.height / 2 + v * cv.height / 2;
+        x ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.stroke();
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+  }
+
+  function start(i) {
+    chunks = [];
+    recIdx = i;
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+    recorder.onstop = () => finish(i);
+    recorder.start();
+    $('s' + i).textContent = 'grabando…';
+    meter(i);
+    refresh();
+  }
+
+  function stop() {
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+    cancelAnimationFrame(raf);
+  }
+
+  async function finish(i) {
+    $('v' + i).hidden = true;
+    recIdx = -1;
+    try {
+      const blob = new Blob(chunks, { type: recorder.mimeType });
+      const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+      const pcm = trim(mono(decoded), decoded.sampleRate);
+      const wav = encodeWav(pcm, decoded.sampleRate);
+      if (takes[i]) URL.revokeObjectURL(takes[i].url);
+      takes[i] = { wav, url: URL.createObjectURL(wav), dur: pcm.length / decoded.sampleRate };
+      $('s' + i).textContent = `grabada · ${takes[i].dur.toFixed(1)} s`;
+    } catch (e) {
+      $('s' + i).textContent = 'error al procesar la grabación: ' + e.message;
+    }
+    refresh();
+  }
+
+  function mono(buf) {
+    const out = new Float32Array(buf.length);
+    for (let c = 0; c < buf.numberOfChannels; c++) {
+      const d = buf.getChannelData(c);
+      for (let k = 0; k < d.length; k++) out[k] += d[k] / buf.numberOfChannels;
+    }
+    return out;
+  }
+
+  // recorta el silencio inicial y final, dejando un pequeño margen
+  function trim(pcm, rate) {
+    const win = Math.floor(rate * .02), thr = .02, pad = Math.floor(rate * .25);
+    const loud = k => { let s = 0; for (let j = k; j < Math.min(k + win, pcm.length); j++) s += pcm[j] * pcm[j]; return Math.sqrt(s / win) > thr; };
+    let a = 0, b = pcm.length - win;
+    while (a < b && !loud(a)) a += win;
+    while (b > a && !loud(b)) b -= win;
+    if (b <= a) return pcm;
+    return pcm.slice(Math.max(0, a - pad), Math.min(pcm.length, b + win + pad));
+  }
+
+  function encodeWav(pcm, rate) {
+    const buf = new ArrayBuffer(44 + pcm.length * 2), v = new DataView(buf);
+    const str = (o, s) => [...s].forEach((ch, k) => v.setUint8(o + k, ch.charCodeAt(0)));
+    str(0, 'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true); str(8, 'WAVE');
+    str(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, pcm.length * 2, true);
+    for (let k = 0; k < pcm.length; k++) v.setInt16(44 + k * 2, Math.max(-1, Math.min(1, pcm[k])) * 0x7fff, true);
+    return new Blob([buf], { type: 'audio/wav' });
+  }
+
+  function download(i) {
+    const a = document.createElement('a');
+    a.href = takes[i].url;
+    a.download = String(i).padStart(2, '0') + '.wav';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  $('allBtn').onclick = async () => {
+    for (let i = 0; i < takes.length; i++) {
+      if (!takes[i]) continue;
+      download(i);
+      await new Promise(r => setTimeout(r, 400)); // algunos navegadores bloquean descargas simultáneas
+    }
+  };
+
+  refresh();
+})();
+</script>
+</body>
+</html>

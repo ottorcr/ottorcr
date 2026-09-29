@@ -1,0 +1,163 @@
+:root {
+  --bg: #14110d;
+  --panel: #1d1914;
+  --paper: #efe4cc;
+  --ink: #f3ead6;
+  --muted: #b7a98c;
+  --line: #3a3228;
+  --sky: #4a9fd8;      /* azul de la bandera */
+  --green: #6fae5a;
+  --gold: #d9a441;
+  --red: #c8442f;
+  --usa: #8fa3c7;
+  --shadow: rgba(0,0,0,.45);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  display: flex; flex-direction: column;
+  overflow-x: hidden;
+}
+header.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; border-bottom: 1px solid var(--line); gap: 12px;
+}
+header.top h1 { font-family: "Playfair Display", serif; font-size: 18px; margin: 0; letter-spacing: .02em; }
+header.top h1 span { color: var(--sky); }
+.flag { display: inline-flex; height: 12px; width: 30px; margin-right: 10px; vertical-align: -1px; border-radius: 2px; overflow: hidden; }
+.flag i { flex: 1; } .flag i:nth-child(1), .flag i:nth-child(3) { background: var(--sky); } .flag i:nth-child(2) { background: #fff; }
+.toplinks { display: flex; gap: 8px; align-items: center; }
+.chapter { font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+/* franja textil inspirada en los huipiles */
+.textile { height: 8px; background:
+  linear-gradient(135deg, transparent 25%, var(--red) 25% 50%, transparent 50% 75%, var(--red) 75%) 0 0 / 16px 16px,
+  linear-gradient(45deg, var(--gold) 25%, var(--sky) 25% 50%, var(--gold) 50% 75%, var(--green) 75%) 0 0 / 16px 16px;
+  opacity: .8; }
+
+main.stage {
+  flex: 1; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 28px; padding: 24px clamp(16px, 4vw, 48px); align-items: center;
+  max-width: 1320px; width: 100%; margin: 0 auto;
+}
+.art {
+  position: relative; aspect-ratio: 3 / 2; width: 100%;
+  background: radial-gradient(ellipse at 50% 30%, #2a241c, #16130f 75%);
+  border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 60px var(--shadow);
+}
+.art .layer { position: absolute; inset: 0; transition: opacity .7s ease, transform .9s ease, filter .7s ease; }
+.art .layer.entering { opacity: 0; transform: scale(1.04); filter: blur(4px); }
+.art .layer.leaving { opacity: 0; transform: scale(.98); filter: blur(3px); }
+.art svg { width: 100%; height: 100%; display: block; }
+.art .layer > svg { animation: kenburns var(--dur, 12s) linear forwards; transform-origin: var(--kb-origin, 50% 50%); }
+@keyframes kenburns { from { transform: scale(1); } to { transform: scale(var(--kb, 1.07)); } }
+.art::before { /* viñeta */
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45));
+}
+.art::after { /* grano de película */
+  content: ""; position: absolute; inset: -20px; z-index: 3; pointer-events: none; opacity: .09; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: grain .6s steps(3) infinite;
+}
+@keyframes grain { 0%{transform:translate(0,0)} 50%{transform:translate(-8px,5px)} 100%{transform:translate(4px,-6px)} }
+.caption {
+  position: absolute; left: 12px; bottom: 10px; z-index: 4; font-family: "IBM Plex Mono", monospace; font-size: 11px;
+  color: rgba(243,234,214,.7); background: rgba(0,0,0,.35); padding: 3px 8px; border-radius: 4px;
+}
+
+.text { min-width: 0; }
+.year { font-family: "Playfair Display", serif; font-weight: 800; font-size: clamp(44px, 7vw, 96px); line-height: .95; color: var(--gold); }
+.kicker { font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--sky); margin: 14px 0 6px; }
+.title { font-family: "Playfair Display", serif; font-size: clamp(24px, 2.8vw, 34px); margin: 0 0 12px; line-height: 1.15; }
+.body { color: var(--muted); font-size: clamp(15px, 1.25vw, 16.5px); line-height: 1.6; }
+.body p { margin: 0 0 10px; }
+.body strong { color: var(--ink); font-weight: 600; }
+.body em { color: var(--ink); }
+.fact { display: inline-block; margin-top: 6px; padding: 8px 12px; border-left: 3px solid var(--gold); background: var(--panel); color: var(--ink); font-size: 14px; }
+blockquote {
+  margin: 8px 0 12px; padding: 10px 14px; border-left: 3px solid var(--sky); background: var(--panel); border-radius: 0 8px 8px 0;
+  font-family: "Playfair Display", serif; font-style: italic; font-size: clamp(15px, 1.3vw, 17px); color: var(--ink); line-height: 1.45;
+}
+blockquote cite { display: block; margin-top: 6px; font-family: "IBM Plex Mono", monospace; font-style: normal; font-size: 11px; color: var(--muted); letter-spacing: .06em; }
+.voices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.voice { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; font-size: 13.5px; line-height: 1.45; }
+.voice b { display: block; font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; }
+.voice.pro b { color: var(--green); } .voice.con b { color: var(--red); } .voice.usa b { color: var(--usa); } .voice.hist b { color: var(--gold); }
+
+.reveal > * { opacity: 0; transform: translateY(14px); animation: rise .8s cubic-bezier(.2,.7,.2,1) forwards; }
+.reveal > *:nth-child(1) { animation-delay: .1s } .reveal > *:nth-child(2) { animation-delay: .3s }
+.reveal > *:nth-child(3) { animation-delay: .5s } .reveal > *:nth-child(4) { animation-delay: .8s }
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+footer.controls { border-top: 1px solid var(--line); padding: 10px 20px 14px; }
+.progress { height: 3px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+.progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--sky), var(--gold)); }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
+.btns { display: flex; gap: 8px; }
+button {
+  font: inherit; font-size: 14px; color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button[aria-pressed="true"] { border-color: var(--sky); color: var(--sky); }
+.timeline { display: flex; gap: 4px; flex: 1; min-width: 0; justify-content: center; flex-wrap: wrap; }
+.timeline button { padding: 4px 7px; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--muted); background: transparent; border-color: transparent; }
+.timeline button.on { color: var(--gold); border-color: var(--gold); }
+.timeline .sep { width: 1px; background: var(--line); margin: 4px 4px; }
+
+/* pantalla de inicio */
+.intro {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px;
+  background: rgba(10, 8, 6, .82); backdrop-filter: blur(6px);
+}
+.intro[hidden] { display: none; }
+.intro-card {
+  max-width: 480px; width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 28px; box-shadow: 0 30px 80px var(--shadow); text-align: center;
+}
+.intro-card .kicker { margin-top: 0; }
+.intro-card h2 { font-family: "Playfair Display", serif; font-size: 40px; margin: 6px 0 10px; color: var(--gold); }
+.intro-card p { color: var(--muted); line-height: 1.55; margin: 0 0 20px; }
+.intro-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.intro-btns button { padding: 11px 18px; font-size: 15px; }
+button.primary { background: var(--gold); border-color: var(--gold); color: #1a140c; font-weight: 600; }
+button.primary:hover { filter: brightness(1.08); border-color: var(--gold); }
+
+/* utilidades de animación SVG */
+.draw { stroke-dasharray: var(--len, 1000); stroke-dashoffset: var(--len, 1000); animation: draw var(--d, 2s) ease forwards; animation-delay: var(--delay, 0s); }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.fade { opacity: 0; animation: fade 1s ease forwards; animation-delay: var(--delay, 0s); }
+@keyframes fade { to { opacity: 1; } }
+.pop { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: pop .6s cubic-bezier(.3,1.6,.5,1) forwards; animation-delay: var(--delay, 0s); }
+@keyframes pop { to { transform: scale(1); } }
+.up { transform-box: fill-box; transform-origin: bottom; transform: scaleY(0); animation: up 1.2s ease forwards; animation-delay: var(--delay, 0s); }
+@keyframes up { to { transform: scaleY(1); } }
+.sway { transform-box: fill-box; transform-origin: bottom center; animation: sway 3s ease-in-out infinite alternate; }
+@keyframes sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+.float { animation: float 5s ease-in-out infinite alternate; }
+@keyframes float { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+.wave-flag { transform-box: fill-box; transform-origin: left center; animation: flagwave 1.4s ease-in-out infinite alternate; }
+@keyframes flagwave { from { transform: skewY(-3deg) scaleX(.96); } to { transform: skewY(3deg) scaleX(1); } }
+.flap { transform-box: fill-box; transform-origin: bottom center; animation: flap .35s ease-in-out infinite alternate; }
+@keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(-.6); } }
+.shimmer { animation: shimmer 3s ease-in-out infinite alternate; }
+@keyframes shimmer { from { opacity: .15; } to { opacity: .55; } }
+
+@media (max-width: 900px) {
+  main.stage { grid-template-columns: 1fr; gap: 16px; padding: 16px; align-items: start; }
+  .year { font-size: 52px; }
+  .toplinks .hide-sm { display: none; }
+  .timeline { flex-basis: 100%; order: -1; justify-content: flex-start; }
+  .timeline .sep { display: none; }
+  .btns { width: 100%; justify-content: center; }
+  .voices { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition: none !important; }
+}
