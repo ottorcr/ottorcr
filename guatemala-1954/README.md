@@ -4,19 +4,23 @@ Animación web interactiva (en español) sobre la historia de Guatemala entre 19
 
 ## Cómo verla
 
-No necesita compilación: descarga o clona el repositorio y abre `index.html` en el navegador (o publícalo con GitHub Pages).
+`index.html` es un **único archivo autocontenido**: descárgalo y ábrelo con doble clic en cualquier navegador (no necesita el resto de la carpeta ni internet, salvo para las tipografías). También puedes publicarlo con GitHub Pages.
 Puedes abrir directamente una escena con `index.html?escena=5`.
 
-## Estructura
+## Estructura y edición
 
 ```
-index.html        página y controles
-css/style.css     estilos y animaciones CSS
-js/geo.js         contornos reales de Centroamérica y del mundo (Natural Earth, simplificados)
-js/art.js         ilustraciones SVG: retrato de Árbenz, quetzal, lago de Atitlán, Tikal, palacio, textiles mayas…
-js/scenes.js      guion: texto, narración e ilustración de cada escena
-js/player.js      reproductor: transiciones, línea de tiempo, narración por voz
+index.html                 archivo final (generado, no editar a mano)
+build.py                   genera index.html incrustando todo lo de src/
+src/index.template.html    página y controles
+src/css/style.css          estilos y animaciones CSS
+src/js/geo.js              contornos reales de Centroamérica y del mundo (Natural Earth, simplificados)
+src/js/art.js              ilustraciones SVG: retrato de Árbenz, quetzal, lago de Atitlán, Tikal, palacio, textiles mayas…
+src/js/scenes.js           guion: texto, narración e ilustración de cada escena
+src/js/player.js           reproductor: transiciones, línea de tiempo, narración por voz
 ```
+
+Después de editar algo en `src/`, ejecuta `python3 build.py` para regenerar `index.html`.
 
 ## Controles
 

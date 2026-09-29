@@ -1,0 +1,47 @@
+<!doctype html>
+<!-- build -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guatemala 1954</title>
+<meta name="description" content="Animación histórica: la Primavera Democrática, Jacobo Árbenz y el golpe de Estado de 1954 respaldado por Estados Unidos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,800;1,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <h1><span class="flag"><i></i><i></i><i></i></span>Guatemala <span>1944–1954</span></h1>
+  <div class="toplinks">
+    <span class="chapter hide-sm" id="chapter"></span>
+    <button id="narrate" aria-pressed="false" title="Narración por voz (si el navegador la soporta)">🔈 Narración</button>
+    <button id="sourcesBtn" class="hide-sm" title="Ir a fuentes">Fuentes</button>
+  </div>
+</header>
+<div class="textile" aria-hidden="true"></div>
+
+<main class="stage">
+  <div class="art" id="art" aria-hidden="true"></div>
+  <section class="text" id="text" aria-live="polite"></section>
+</main>
+
+<footer class="controls">
+  <div class="progress"><div id="bar"></div></div>
+  <div class="row">
+    <div class="btns">
+      <button id="prev" aria-label="Escena anterior">◀</button>
+      <button id="play" aria-label="Pausar">❚❚</button>
+      <button id="next" aria-label="Escena siguiente">▶</button>
+    </div>
+    <nav class="timeline" id="timeline" aria-label="Línea de tiempo"></nav>
+  </div>
+</footer>
+
+<script src="js/geo.js"></script>
+<script src="js/art.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/player.js"></script>
+</body>
+</html>
