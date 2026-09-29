@@ -4,12 +4,19 @@ Animación web interactiva (en español) sobre la historia de Guatemala entre 19
 
 ## Cómo verla
 
-Es un único archivo HTML sin dependencias de compilación:
+No necesita compilación: descarga o clona el repositorio y abre `index.html` en el navegador (o publícalo con GitHub Pages).
+Puedes abrir directamente una escena con `index.html?escena=5`.
 
-1. Descarga o clona el repositorio.
-2. Abre `index.html` en tu navegador.
+## Estructura
 
-También puedes publicarla con **GitHub Pages** (Settings → Pages → Deploy from branch → `main` / root).
+```
+index.html        página y controles
+css/style.css     estilos y animaciones CSS
+js/geo.js         contornos reales de Centroamérica y del mundo (Natural Earth, simplificados)
+js/art.js         ilustraciones SVG: retrato de Árbenz, quetzal, lago de Atitlán, Tikal, palacio, textiles mayas…
+js/scenes.js      guion: texto, narración e ilustración de cada escena
+js/player.js      reproductor: transiciones, línea de tiempo, narración por voz
+```
 
 ## Controles
 
@@ -17,23 +24,18 @@ También puedes publicarla con **GitHub Pages** (Settings → Pages → Deploy f
 | --- | --- |
 | Reproducir / pausar | botón ❚❚ / ► o barra espaciadora |
 | Escena anterior / siguiente | ◀ ▶ o flechas del teclado |
-| Saltar a un año | línea de tiempo inferior |
-| Narración por voz | botón “Narración” (usa la voz en español del navegador) |
+| Saltar a una escena | línea de tiempo inferior |
+| Narración por voz | botón “Narración” (voz en español del navegador; espera a que termine antes de avanzar) |
 
-## Escenas
+## Escenas (20, en 5 capítulos)
 
-1. **1944–1954** — Introducción
-2. **1944** — Revolución de Octubre y gobierno de Arévalo
-3. **1951** — Árbenz llega al poder
-4. **El Pulpo** — La United Fruit Company
-5. **1952** — Decreto 900 y la Reforma Agraria
-6. **Washington** — Guerra Fría, los hermanos Dulles y la campaña de propaganda
-7. **1953** — Operación PBSUCCESS
-8. **1954** — La invasión de Castillo Armas
-9. **27 de junio** — La renuncia de Árbenz
-10. **1954–1996** — Consecuencias y conflicto armado interno
-11. **Memoria** — Desclasificación, disculpas de EE. UU. (1999) y del Estado de Guatemala (2011)
-12. **Fuentes**
+**Contexto** — Guatemala (lago de Atitlán, quetzal) · 1944: café, banano y dictadura (mapa real)
+**Revolución** — Octubre de 1944 · Arévalo y la “primera primavera”
+**Árbenz** — ¿Quién era? (retrato ilustrado) · Elección de 1950 · Carretera, puerto e hidroeléctrica · La United Fruit · Decreto 900
+**El golpe** — Washington y los Dulles · Propaganda, Iglesia y radio · La invasión (mapa real) · La renuncia (cita del discurso) · Exilio (ruta en el mapamundi)
+**Después** — Consecuencias · Voces y opiniones · El regreso de sus restos (1995) · Árbenz en el imaginario popular · Memoria y disculpas · Fuentes
+
+El retrato de Árbenz es una ilustración interpretativa basada en descripciones y fotografías de la época, no una reproducción fotográfica.
 
 ## Fuentes
 
@@ -43,5 +45,9 @@ También puedes publicarla con **GitHub Pages** (Settings → Pages → Deploy f
 - Nick Cullather, *Secret History: The CIA's Classified Account of Its Operations in Guatemala, 1952–1954* (1999).
 - U.S. Department of State, Office of the Historian — *Foreign Relations of the United States, 1952–1954, Guatemala*.
 - National Security Archive — documentos desclasificados sobre Guatemala.
+- Roberto García Ferreira, “La CIA y el exilio de Jacobo Árbenz”, *Perfiles Latinoamericanos* (2006).
+- Prensa Libre, hemeroteca: renuncia de Árbenz (1954) y repatriación de sus restos (1995).
+- Acuerdo de solución amistosa ante la CIDH y disculpa del Estado de Guatemala (2011).
+- Mapas: Natural Earth vía `world-atlas` (dominio público).
 
 Las cifras (votos, familias beneficiadas, hectáreas, indemnizaciones) son aproximaciones tomadas de estas obras; distintas fuentes dan valores ligeramente diferentes.
