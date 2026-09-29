@@ -3,7 +3,11 @@
   const scenes = window.SCENES;
   const $ = id => document.getElementById(id);
   const art = $('art'), text = $('text'), bar = $('bar'), timeline = $('timeline'), chapter = $('chapter');
-  let idx = 0, playing = true, elapsed = 0, last = performance.now(), narrate = false;
+  // Pista de narración grabada (la incrusta build.py); si no existe, se usa la voz del navegador.
+  const track = window.NARRATION && window.NARRATION.length === scenes.length ? window.NARRATION : null;
+  const audio = track ? new Audio() : null;
+  if (audio) window.__narration = audio;
+  let idx = 0, playing = false, elapsed = 0, last = performance.now(), narrate = false;
 
   scenes.forEach((s, i) => {
     if (i > 0 && scenes[i - 1].chapter !== s.chapter) {
@@ -17,6 +21,12 @@
   });
 
   function speak(s) {
+    if (audio) {
+      audio.pause();
+      audio.src = track[idx].src;
+      if (narrate && playing) audio.play().catch(() => {});
+      return;
+    }
     if (!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
     if (!narrate || !s.say) return;
@@ -26,6 +36,15 @@
     if (v) u.voice = v;
     speechSynthesis.speak(u);
   }
+
+  function talking() {
+    if (!narrate) return false;
+    if (audio) return !audio.paused && !audio.ended;
+    return 'speechSynthesis' in window && speechSynthesis.speaking;
+  }
+
+  // con narración, la escena dura al menos lo que dura su pista
+  const sceneDur = i => Math.max(scenes[i].dur, narrate && track ? track[i].dur + 1.2 : 0);
 
   function go(i) {
     idx = (i + scenes.length) % scenes.length;
@@ -39,7 +58,7 @@
     });
     const layer = document.createElement('div');
     layer.className = 'layer entering';
-    layer.style.setProperty('--dur', s.dur + 's');
+    layer.style.setProperty('--dur', sceneDur(idx) + 's');
     layer.style.setProperty('--kb', s.kb || 1.06);
     layer.style.setProperty('--kb-origin', s.origin || '50% 50%');
     layer.innerHTML = s.art() + (s.caption ? `<div class="caption">${s.caption}</div>` : '');
@@ -68,46 +87,64 @@
     $('play').textContent = p ? '❚❚' : '►';
     $('play').setAttribute('aria-label', p ? 'Pausar' : 'Reproducir');
     pauseAnimations(!p);
-    if ('speechSynthesis' in window) p ? speechSynthesis.resume() : speechSynthesis.pause();
+    if (audio) {
+      if (p && narrate && !audio.ended) audio.play().catch(() => {}); else audio.pause();
+    } else if ('speechSynthesis' in window) {
+      p ? speechSynthesis.resume() : speechSynthesis.pause();
+    }
+  }
+
+  function setNarrate(n) {
+    narrate = n;
+    $('narrate').setAttribute('aria-pressed', narrate);
+    $('narrate').textContent = narrate ? '🔊 Narración' : '🔈 Narración';
   }
 
   function loop(t) {
     const dt = Math.min(.25, (t - last) / 1000); last = t;
     if (playing) {
-      // con narración activa, espera a que termine la voz antes de avanzar
-      const talking = narrate && 'speechSynthesis' in window && speechSynthesis.speaking;
       elapsed += dt;
-      const d = scenes[idx].dur;
-      if (elapsed >= d && !talking) {
-        if (idx < scenes.length - 1) go(idx + 1); else { elapsed = d; setPlaying(false); }
+      if (elapsed >= sceneDur(idx) && !talking()) {
+        if (idx < scenes.length - 1) go(idx + 1); else { elapsed = sceneDur(idx); setPlaying(false); }
       }
     }
-    bar.style.width = ((idx + Math.min(1, elapsed / scenes[idx].dur)) / scenes.length * 100) + '%';
+    bar.style.width = ((idx + Math.min(1, elapsed / sceneDur(idx))) / scenes.length * 100) + '%';
     requestAnimationFrame(loop);
   }
 
   $('prev').onclick = () => go(idx - 1);
   $('next').onclick = () => go(idx + 1);
   $('play').onclick = () => {
-    if (!playing && idx === scenes.length - 1 && elapsed >= scenes[idx].dur) go(0);
+    if (!playing && idx === scenes.length - 1 && elapsed >= sceneDur(idx)) { setPlaying(true); go(0); return; }
     setPlaying(!playing);
   };
   $('sourcesBtn').onclick = () => go(scenes.findIndex(s => s.sources));
   $('narrate').onclick = () => {
-    narrate = !narrate;
-    $('narrate').setAttribute('aria-pressed', narrate);
-    $('narrate').textContent = narrate ? '🔊 Narración' : '🔈 Narración';
+    setNarrate(!narrate);
     elapsed = 0;
     speak(scenes[idx]);
   };
   document.addEventListener('keydown', e => {
+    if (!$('intro').hidden) return;
     if (e.key === 'ArrowRight') go(idx + 1);
     else if (e.key === 'ArrowLeft') go(idx - 1);
     else if (e.key === ' ') { e.preventDefault(); $('play').click(); }
   });
   document.addEventListener('visibilitychange', () => { last = performance.now(); });
 
+  // pantalla de inicio: el navegador solo permite audio tras un clic
   const start = parseInt(new URLSearchParams(location.search).get('escena'), 10);
-  go(Number.isFinite(start) ? start - 1 : 0);
+  const first = Number.isFinite(start) ? start - 1 : 0;
+  if (!track && !('speechSynthesis' in window)) $('introVoice').hidden = true;
+  const begin = withVoice => {
+    $('intro').hidden = true;
+    setNarrate(withVoice);
+    go(first);
+    setPlaying(true);
+  };
+  $('introVoice').onclick = () => begin(true);
+  $('introMute').onclick = () => begin(false);
+  go(first);
+  pauseAnimations(true);
   requestAnimationFrame(loop);
 })();

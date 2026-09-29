@@ -1,0 +1,82 @@
+name: Guatemala 1954 · narración y publicación
+
+# Genera la narración con una voz neuronal (Piper), empaqueta la animación en un solo
+# index.html y, en main, la publica en GitHub Pages.
+# Requisito único: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+    paths: ['guatemala-1954/**', '.github/workflows/guatemala-1954.yml']
+  pull_request:
+    paths: ['guatemala-1954/**', '.github/workflows/guatemala-1954.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: guatemala-1954-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VOZ_URL: https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high
+  VOZ: es_MX-claude-high
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: guatemala-1954
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Piper y lame
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lame
+          pip install piper-tts
+
+      - name: Descargar voz ${{ env.VOZ }}
+        run: |
+          mkdir -p voces
+          curl -fsSL --retry 3 -o "voces/$VOZ.onnx" "$VOZ_URL/$VOZ.onnx"
+          curl -fsSL --retry 3 -o "voces/$VOZ.onnx.json" "$VOZ_URL/$VOZ.onnx.json"
+
+      - name: Generar narración
+        run: python3 tools/narrar.py --motor piper --modelo "voces/$VOZ.onnx"
+
+      - name: Empaquetar index.html autocontenido
+        run: python3 build.py --salida dist/index.html
+
+      - name: Subir paquete descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: guatemala-1954
+          path: |
+            guatemala-1954/dist/index.html
+            guatemala-1954/audio/
+
+      - name: Preparar artefacto de Pages
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: guatemala-1954/dist
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

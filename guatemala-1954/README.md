@@ -17,10 +17,40 @@ src/css/style.css          estilos y animaciones CSS
 src/js/geo.js              contornos reales de Centroamérica y del mundo (Natural Earth, simplificados)
 src/js/art.js              ilustraciones SVG: retrato de Árbenz, quetzal, lago de Atitlán, Tikal, palacio, textiles mayas…
 src/js/scenes.js           guion: texto, narración e ilustración de cada escena
-src/js/player.js           reproductor: transiciones, línea de tiempo, narración por voz
+src/js/player.js           reproductor: transiciones, línea de tiempo, narración
+audio/                     pista de narración: un MP3 por escena + manifest.json
+tools/narrar.py            genera audio/ a partir de los textos `say` de cada escena
 ```
 
 Después de editar algo en `src/`, ejecuta `python3 build.py` para regenerar `index.html`.
+
+## Narración
+
+Cada escena tiene su propia pista MP3 (unos 6 minutos en total) y la animación espera a que termine antes de avanzar. `build.py` incrusta el audio en `index.html` (≈2,5 MB).
+
+- La versión de este repositorio usa **espeak-ng** (voz sintética), la única voz en español disponible sin conexión en el entorno donde se creó.
+- El flujo de GitHub Actions la regenera con **Piper**, una voz neuronal abierta con acento mexicano (`es_MX-claude-high`), mucho más natural.
+
+Para regenerarla en tu computadora:
+
+```bash
+pip install piper-tts                     # y lame: apt install lame / brew install lame
+mkdir -p voces && cd voces
+curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx
+curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx.json
+cd .. && python3 tools/narrar.py --motor piper && python3 build.py
+```
+
+También puedes grabar tu propia voz: reemplaza los archivos `audio/NN.mp3`, actualiza las duraciones en `audio/manifest.json` y ejecuta `python3 build.py`.
+
+## Publicación
+
+El flujo `.github/workflows/guatemala-1954.yml` genera la narración con Piper, empaqueta el `index.html` autocontenido y:
+
+- en cada PR, lo deja como paquete descargable en la pestaña **Actions** (artefacto `guatemala-1954`);
+- en `main`, lo publica en **GitHub Pages**. Solo hay que activarlo una vez en *Settings → Pages → Source: GitHub Actions*. Quedará en `https://ottorcr.github.io/ottorcr/`.
+
+Como es un solo archivo HTML, también se puede subir tal cual a Netlify Drop, Cloudflare Pages, itch.io o cualquier hosting estático.
 
 ## Controles
 
@@ -29,7 +59,7 @@ Después de editar algo en `src/`, ejecuta `python3 build.py` para regenerar `in
 | Reproducir / pausar | botón ❚❚ / ► o barra espaciadora |
 | Escena anterior / siguiente | ◀ ▶ o flechas del teclado |
 | Saltar a una escena | línea de tiempo inferior |
-| Narración por voz | botón “Narración” (voz en español del navegador; espera a que termine antes de avanzar) |
+| Narración | al empezar, “Ver con narración”; luego el botón “Narración” la activa o silencia |
 
 ## Escenas (20, en 5 capítulos)
 

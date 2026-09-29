@@ -110,6 +110,24 @@ button[aria-pressed="true"] { border-color: var(--sky); color: var(--sky); }
 .timeline button.on { color: var(--gold); border-color: var(--gold); }
 .timeline .sep { width: 1px; background: var(--line); margin: 4px 4px; }
 
+/* pantalla de inicio */
+.intro {
+  position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px;
+  background: rgba(10, 8, 6, .82); backdrop-filter: blur(6px);
+}
+.intro[hidden] { display: none; }
+.intro-card {
+  max-width: 480px; width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 28px; box-shadow: 0 30px 80px var(--shadow); text-align: center;
+}
+.intro-card .kicker { margin-top: 0; }
+.intro-card h2 { font-family: "Playfair Display", serif; font-size: 40px; margin: 6px 0 10px; color: var(--gold); }
+.intro-card p { color: var(--muted); line-height: 1.55; margin: 0 0 20px; }
+.intro-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.intro-btns button { padding: 11px 18px; font-size: 15px; }
+button.primary { background: var(--gold); border-color: var(--gold); color: #1a140c; font-weight: 600; }
+button.primary:hover { filter: brightness(1.08); border-color: var(--gold); }
+
 /* utilidades de animación SVG */
 .draw { stroke-dasharray: var(--len, 1000); stroke-dashoffset: var(--len, 1000); animation: draw var(--d, 2s) ease forwards; animation-delay: var(--delay, 0s); }
 @keyframes draw { to { stroke-dashoffset: 0; } }

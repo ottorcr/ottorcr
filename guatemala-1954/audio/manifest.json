@@ -1,0 +1,85 @@
+{
+ "voz": "espeak-ng es-419",
+ "escenas": [
+  {
+   "archivo": "00.mp3",
+   "duracion": 22.09
+  },
+  {
+   "archivo": "01.mp3",
+   "duracion": 21.83
+  },
+  {
+   "archivo": "02.mp3",
+   "duracion": 19.65
+  },
+  {
+   "archivo": "03.mp3",
+   "duracion": 16.63
+  },
+  {
+   "archivo": "04.mp3",
+   "duracion": 20.52
+  },
+  {
+   "archivo": "05.mp3",
+   "duracion": 18.49
+  },
+  {
+   "archivo": "06.mp3",
+   "duracion": 14.68
+  },
+  {
+   "archivo": "07.mp3",
+   "duracion": 15.64
+  },
+  {
+   "archivo": "08.mp3",
+   "duracion": 15.28
+  },
+  {
+   "archivo": "09.mp3",
+   "duracion": 17.77
+  },
+  {
+   "archivo": "10.mp3",
+   "duracion": 22.42
+  },
+  {
+   "archivo": "11.mp3",
+   "duracion": 19.35
+  },
+  {
+   "archivo": "12.mp3",
+   "duracion": 21.19
+  },
+  {
+   "archivo": "13.mp3",
+   "duracion": 18.22
+  },
+  {
+   "archivo": "14.mp3",
+   "duracion": 15.25
+  },
+  {
+   "archivo": "15.mp3",
+   "duracion": 25.18
+  },
+  {
+   "archivo": "16.mp3",
+   "duracion": 14.97
+  },
+  {
+   "archivo": "17.mp3",
+   "duracion": 13.94
+  },
+  {
+   "archivo": "18.mp3",
+   "duracion": 23.6
+  },
+  {
+   "archivo": "19.mp3",
+   "duracion": 6.26
+  }
+ ]
+}
