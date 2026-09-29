@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Genera index.html (un solo archivo autocontenido) a partir de src/ y audio/.
+"""Genera index.html (un solo archivo autocontenido) a partir de src/ y audio/, y grabar.html.
 
 El código fuente vive en src/ (plantilla, CSS y JS separados para editar cómodamente) y la
 narración en audio/ (la genera tools/narrar.py). index.html lleva todo incrustado, así funciona
 al abrirlo directamente, descargarlo suelto o publicarlo en cualquier hosting estático.
+
+grabar.html es la herramienta para grabar la narración con tu propia voz (ver tools/narrar.py).
 
 Uso:  python3 build.py [--sin-audio] [--salida index.html]
 """
@@ -35,6 +37,20 @@ def narration():
     return script(f"/* Narración: {data['voz']} */\nwindow.NARRATION = {json.dumps(track)};")
 
 
+def recorder(out_dir):
+    """Escribe grabar.html con los textos de narración de cada escena incrustados."""
+    src = (SRC / "js" / "scenes.js").read_text(encoding="utf-8")
+    field = lambda k: [v.replace("\\'", "'") for v in re.findall(k + r":\s*'((?:[^'\\]|\\.)*)'", src)]
+    years, titles, says = field(r"\byear"), field(r"\btitle"), field(r"\bsay")
+    assert len(years) == len(titles) == len(says), (len(years), len(titles), len(says))
+    textos = [{"year": y, "title": t, "say": s} for y, t, s in zip(years, titles, says)]
+    html = (ROOT / "tools" / "grabar.template.html").read_text(encoding="utf-8")
+    html = html.replace("/*TEXTOS*/", "const TEXTOS = " + json.dumps(textos, ensure_ascii=False) + ";")
+    html = html.replace("<!-- build -->", "<!-- Archivo generado por build.py a partir de tools/grabar.template.html. No editar a mano. -->")
+    (out_dir / "grabar.html").write_text(html, encoding="utf-8")
+    return len(textos)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sin-audio", action="store_true")
@@ -54,6 +70,7 @@ def main():
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
     print(f"{out}: {len(html) / 1024 / 1024:.2f} MB · narración: {'sí' if audio else 'no'}")
+    print(f"{out.parent / 'grabar.html'}: {recorder(out.parent)} escenas para grabar")
 
 
 if __name__ == "__main__":

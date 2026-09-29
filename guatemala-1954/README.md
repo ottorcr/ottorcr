@@ -20,18 +20,39 @@ src/js/scenes.js           guion: texto, narración e ilustración de cada escen
 src/js/player.js           reproductor: transiciones, línea de tiempo, narración
 audio/                     pista de narración: un MP3 por escena + manifest.json
 tools/narrar.py            genera audio/ a partir de los textos `say` de cada escena
+tools/grabar.template.html herramienta para grabar la narración con tu voz (build.py genera grabar.html)
+grabar.html                grabadora lista para usar (generada)
 ```
 
 Después de editar algo en `src/`, ejecuta `python3 build.py` para regenerar `index.html`.
 
 ## Narración
 
-Cada escena tiene su propia pista MP3 (unos 6 minutos en total) y la animación espera a que termine antes de avanzar. `build.py` incrusta el audio en `index.html` (≈2,5 MB).
+Cada escena tiene su propia pista MP3 (unos 6 minutos en total) y la animación espera a que termine antes de avanzar. `build.py` incrusta el audio en `index.html`. `tools/narrar.py` genera las pistas con cuatro motores, del más guatemalteco al menos:
 
-- La versión de este repositorio usa **espeak-ng** (voz sintética), la única voz en español disponible sin conexión en el entorno donde se creó.
-- El flujo de GitHub Actions la regenera con **Piper**, una voz neuronal abierta con acento mexicano (`es_MX-claude-high`), mucho más natural.
+| Motor | Acento | Qué necesita |
+| --- | --- | --- |
+| `grabaciones` | **Guatemalteco real**: tu voz | grabar con `grabar.html` |
+| `azure` | **Guatemalteco** (voces neuronales `es-GT-AndresNeural` / `es-GT-MartaNeural`) | cuenta de Azure (tiene nivel gratuito) |
+| `piper` | mexicano (voz neuronal abierta `es_MX-claude-high`) | nada, lo hace GitHub Actions |
+| `espeak` | sintético, robótico | nada; es la versión incluida en este repo |
 
-Para regenerarla en tu computadora:
+### Opción 1: grabar tu propia voz
+
+1. Abre `grabar.html` en Chrome, Edge o Firefox (con doble clic; también queda publicado junto a la animación).
+2. Activa el micrófono y graba cada escena leyendo el texto en pantalla. Los silencios del inicio y del final se recortan solos.
+3. Descarga todas las tomas (`00.wav` … `19.wav`) en `guatemala-1954/grabaciones/`.
+4. Ejecuta `python3 tools/narrar.py --motor grabaciones && python3 build.py`, o simplemente sube la carpeta `grabaciones/` al repositorio: GitHub Actions las usará automáticamente.
+
+### Opción 2: voz guatemalteca de Azure
+
+1. Crea un recurso **Speech** en el portal de Azure y copia su clave y región (por ejemplo `eastus`).
+2. En GitHub: *Settings → Secrets and variables → Actions* → agrega los secretos `AZURE_SPEECH_KEY` y `AZURE_SPEECH_REGION`. Para voz femenina, agrega la variable `AZURE_VOZ` = `es-GT-MartaNeural`.
+3. Vuelve a ejecutar el flujo (pestaña *Actions* → *Run workflow*). Si no hay grabaciones propias, usará Azure.
+
+En tu computadora: `AZURE_SPEECH_KEY=… AZURE_SPEECH_REGION=eastus python3 tools/narrar.py --motor azure && python3 build.py`.
+
+### Opción 3: Piper (sin cuentas)
 
 ```bash
 pip install piper-tts                     # y lame: apt install lame / brew install lame
@@ -41,11 +62,9 @@ curl -LO https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claud
 cd .. && python3 tools/narrar.py --motor piper && python3 build.py
 ```
 
-También puedes grabar tu propia voz: reemplaza los archivos `audio/NN.mp3`, actualiza las duraciones en `audio/manifest.json` y ejecuta `python3 build.py`.
-
 ## Publicación
 
-El flujo `.github/workflows/guatemala-1954.yml` genera la narración con Piper, empaqueta el `index.html` autocontenido y:
+El flujo `.github/workflows/guatemala-1954.yml` genera la narración con la mejor voz disponible (grabaciones propias → Azure es-GT → Piper), empaqueta el `index.html` autocontenido y:
 
 - en cada PR, lo deja como paquete descargable en la pestaña **Actions** (artefacto `guatemala-1954`);
 - en `main`, lo publica en **GitHub Pages**. Solo hay que activarlo una vez en *Settings → Pages → Source: GitHub Actions*. Quedará en `https://ottorcr.github.io/ottorcr/`.

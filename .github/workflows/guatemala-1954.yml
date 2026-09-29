@@ -1,8 +1,13 @@
 name: Guatemala 1954 · narración y publicación
 
-# Genera la narración con una voz neuronal (Piper), empaqueta la animación en un solo
-# index.html y, en main, la publica en GitHub Pages.
-# Requisito único: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Genera la narración, empaqueta la animación en un solo index.html y, en main, la publica
+# en GitHub Pages (requisito único: Settings → Pages → Source: "GitHub Actions").
+#
+# Voz de la narración, en orden de preferencia:
+#   1. grabaciones propias en guatemala-1954/grabaciones/ (00.wav … 19.wav, ver grabar.html)
+#   2. voz guatemalteca de Azure, si existen los secretos AZURE_SPEECH_KEY y AZURE_SPEECH_REGION
+#      (y opcionalmente la variable de repositorio AZURE_VOZ: es-GT-AndresNeural o es-GT-MartaNeural)
+#   3. Piper es_MX-claude-high (voz neuronal abierta, acento mexicano)
 
 on:
   push:
@@ -36,19 +41,37 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Instalar Piper y lame
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq lame
-          pip install piper-tts
+      - name: Instalar lame
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lame
 
-      - name: Descargar voz ${{ env.VOZ }}
+      - name: Elegir voz
+        id: voz
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
         run: |
+          if [ -f grabaciones/00.wav ] || [ -f grabaciones/00.mp3 ]; then echo "motor=grabaciones" >> "$GITHUB_OUTPUT"
+          elif [ -n "$AZURE_SPEECH_KEY" ]; then echo "motor=azure" >> "$GITHUB_OUTPUT"
+          else echo "motor=piper" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Instalar Piper y descargar voz ${{ env.VOZ }}
+        if: steps.voz.outputs.motor == 'piper'
+        run: |
+          pip install piper-tts
           mkdir -p voces
           curl -fsSL --retry 3 -o "voces/$VOZ.onnx" "$VOZ_URL/$VOZ.onnx"
           curl -fsSL --retry 3 -o "voces/$VOZ.onnx.json" "$VOZ_URL/$VOZ.onnx.json"
 
-      - name: Generar narración
-        run: python3 tools/narrar.py --motor piper --modelo "voces/$VOZ.onnx"
+      - name: Generar narración (${{ steps.voz.outputs.motor }})
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+          AZURE_VOZ: ${{ vars.AZURE_VOZ || 'es-GT-AndresNeural' }}
+        run: |
+          case "${{ steps.voz.outputs.motor }}" in
+            grabaciones) python3 tools/narrar.py --motor grabaciones --dir grabaciones ;;
+            azure)       python3 tools/narrar.py --motor azure --voz "$AZURE_VOZ" ;;
+            piper)       python3 tools/narrar.py --motor piper --modelo "voces/$VOZ.onnx" ;;
+          esac
 
       - name: Empaquetar index.html autocontenido
         run: python3 build.py --salida dist/index.html
@@ -58,7 +81,7 @@ jobs:
         with:
           name: guatemala-1954
           path: |
-            guatemala-1954/dist/index.html
+            guatemala-1954/dist/
             guatemala-1954/audio/
 
       - name: Preparar artefacto de Pages
